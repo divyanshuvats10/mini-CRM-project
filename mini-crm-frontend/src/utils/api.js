@@ -10,10 +10,15 @@ const getApiBaseUrl = () => {
   return import.meta.env.VITE_API_URL || 'http://localhost:5000';
 };
 
+// Token management
+const getToken = () => localStorage.getItem('authToken');
+const setToken = (token) => localStorage.setItem('authToken', token);
+const removeToken = () => localStorage.removeItem('authToken');
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  withCredentials: true, // This ensures cookies are sent with requests for authentication
+  withCredentials: false, // Don't use cookies, use Authorization headers instead
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,11 +28,22 @@ const api = axios.create({
 // Log the API URL being used
 console.log('API Base URL:', api.defaults.baseURL);
 console.log('Environment:', import.meta.env.MODE);
+console.log('Using JWT authentication instead of cookies');
 
-// Request interceptor for debugging
+// Request interceptor to add JWT token to requests
 api.interceptors.request.use(
   (config) => {
     console.log(`Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${config.url}`);
+    
+    // Add JWT token to Authorization header if available
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 Adding JWT token to request');
+    } else {
+      console.log('🔓 No JWT token available');
+    }
+    
     return config;
   },
   (error) => {
@@ -40,6 +56,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log(`Response from ${response.config.url}:`, response.status, response.data);
+    
+    // If response contains a token, save it
+    if (response.data.token) {
+      console.log('💾 Saving JWT token to localStorage');
+      setToken(response.data.token);
+    }
+    
     return response;
   },
   (error) => {
@@ -47,8 +70,8 @@ api.interceptors.response.use(
     
     // Handle specific error cases
     if (error.response?.status === 401) {
-      console.log('Unauthorized access - user may need to login');
-      // Don't automatically redirect here, let the AuthContext handle it
+      console.log('🔓 Unauthorized access - removing token');
+      removeToken(); // Clear invalid token
     }
     
     if (error.response?.status === 403) {
@@ -63,4 +86,6 @@ api.interceptors.response.use(
   }
 );
 
+// Export token management functions
+export { getToken, setToken, removeToken };
 export default api; 

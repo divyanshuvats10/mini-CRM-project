@@ -19,35 +19,32 @@ function LoginPage() {
   }, [user, navigate, from]);
 
   const handleSuccess = (credentialResponse) => {
-    console.log('🔐 Starting Google login...');
-    console.log('🍪 Cookies before login:', document.cookie);
+    console.log('🔐 Starting Google login with JWT...');
     
-    api.post('/auth/google', {
+    api.post('/auth/google-jwt', {
       credential: credentialResponse.credential
     })
       .then(response => {
-        console.log('✅ Login response received:', response.data);
-        console.log('🍪 Response headers:', response.headers);
-        console.log('🍪 Set-Cookie in response:', response.headers['set-cookie']);
-        console.log('🍪 Cookies after login response:', document.cookie);
+        console.log('✅ JWT login response received:', response.data);
+        console.log('🔐 JWT token received:', response.data.token ? 'Yes' : 'No');
+        
+        if (response.data.token) {
+          console.log('💾 JWT token automatically saved by interceptor');
+        }
         
         setUser(response.data.user);
-        
-        // Check cookies again after a brief delay
-        setTimeout(() => {
-          console.log('🍪 Cookies after 100ms delay:', document.cookie);
-        }, 100);
+        console.log('🎉 User state updated, navigating to:', from);
         
         navigate(from, { replace: true });
       })
       .catch(error => {
-        console.error('🚨 Login failed:', error);
+        console.error('🚨 JWT login failed:', error);
         console.error('Error details:', error.response?.data);
       });
   };
 
   const handleError = () => {
-    console.log('Login Failed');
+    console.log('🚨 Google Login Failed');
   };
 
   return (

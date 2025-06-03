@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../utils/api';
+import api, { getToken, removeToken } from '../utils/api';
 
 export const AuthContext = createContext(null);
 
@@ -8,48 +8,50 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing session on mount
+  // Check for existing JWT token on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('🔍 Checking authentication status...');
+        console.log('🔍 Checking JWT authentication status...');
         console.log('🌐 Current origin:', window.location.origin);
         console.log('📡 API Base URL:', api.defaults.baseURL);
-        console.log('🍪 All cookies:', document.cookie);
-        console.log('🍪 Session cookies:', document.cookie.split(';').filter(c => c.includes('sessionId')));
         
-        const response = await api.get('/auth/user');
-        console.log('🔐 Auth check response:', response.data);
-        console.log('🍪 Response headers:', response.headers);
-        console.log('🍪 Set-Cookie header:', response.headers['set-cookie']);
+        const token = getToken();
+        if (!token) {
+          console.log('🔓 No JWT token found in localStorage');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        console.log('🔐 JWT token found, verifying...');
+        
+        const response = await api.get('/auth/user-jwt');
+        console.log('🔐 JWT auth check response:', response.data);
         
         if (response.data.user) {
           setUser(response.data.user);
-          console.log('✅ User authenticated:', response.data.user.name);
+          console.log('✅ User authenticated via JWT:', response.data.user.name);
         } else {
           setUser(null);
-          console.log('❌ No user authenticated');
+          removeToken(); // Remove invalid token
+          console.log('❌ JWT token invalid, removed from storage');
         }
       } catch (error) {
-        console.error('🚨 Auth check failed:', error);
+        console.error('🚨 JWT auth check failed:', error);
         console.error('Error details:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          headers: error.response?.headers
         });
         
-        // If it's a CORS or network error, log more details
-        if (error.code === 'ERR_NETWORK') {
-          console.error('🌐 Network error - possible CORS issue');
-        }
-        
-        // If the request fails, assume no authentication
+        // If token is invalid, remove it
+        removeToken();
         setUser(null);
+        console.log('🔓 Removed invalid JWT token');
       } finally {
         setLoading(false);
-        console.log('🏁 Auth check completed');
-        console.log('🍪 Cookies after auth check:', document.cookie);
+        console.log('🏁 JWT auth check completed');
       }
     };
 
@@ -59,16 +61,24 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      console.log('🚪 Attempting logout...');
-      console.log('🍪 Cookies before logout:', document.cookie);
+      console.log('🚪 Attempting JWT logout...');
       
-      await api.post('/auth/logout');
+      // Remove token from localStorage
+      removeToken();
       setUser(null);
-      console.log('✅ User logged out successfully');
-      console.log('🍪 Cookies after logout:', document.cookie);
+      console.log('✅ JWT logout successful - token removed');
+      
+      // Optional: Also call backend logout (for session cleanup if needed)
+      try {
+        await api.post('/auth/logout');
+      } catch (err) {
+        // Ignore backend logout errors, local logout is sufficient for JWT
+        console.log('Backend logout call failed (ignored for JWT):', err.message);
+      }
     } catch (error) {
-      console.error('🚨 Logout failed:', error);
-      // Still clear user state even if request fails
+      console.error('🚨 JWT logout failed:', error);
+      // Still clear user state and token even if request fails
+      removeToken();
       setUser(null);
     }
   };
