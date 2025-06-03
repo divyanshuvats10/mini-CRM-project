@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import RuleBuilder from '../components/RuleBuilder';
@@ -9,8 +9,22 @@ export default function CreateSegment() {
   const [name, setName] = useState('');
   const [rules, setRules] = useState([]);
   const [previewCount, setPreviewCount] = useState(null);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Fetch total customer count on component mount
+  useEffect(() => {
+    const fetchTotalCustomers = async () => {
+      try {
+        const response = await api.get('/api/customers/count');
+        setTotalCustomers(response.data.count);
+      } catch (error) {
+        console.error('Error fetching total customers:', error);
+      }
+    };
+    fetchTotalCustomers();
+  }, []);
 
   const generateRules = async () => {
     if (aiPrompt.trim() === '') return;
@@ -57,11 +71,41 @@ export default function CreateSegment() {
           <p className="mt-3 text-lg text-gray-600">
             Define your target audience using AI-powered rules or manual controls
           </p>
+          <div className="mt-4 inline-flex items-center px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+            <svg className="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="text-blue-800 font-medium">Total Customers: {totalCustomers}</span>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-8">
-            {/* AI Prompt Section */}
+            {/* Segment Name Section - Moved to first position */}
+            <div className="mb-8">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100">
+                    <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Segment Details</h2>
+                  <p className="text-sm text-gray-500">Name your segment for easy reference</p>
+                </div>
+              </div>
+              <input
+                type="text"
+                placeholder="Enter segment name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50"
+              />
+            </div>
+
+            {/* AI Prompt Section - Moved to second position */}
             <div className="mb-8">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
@@ -87,7 +131,7 @@ export default function CreateSegment() {
                 <button
                   onClick={generateRules}
                   disabled={!aiPrompt.trim() || isGenerating}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 min-w-fit"
                 >
                   {isGenerating ? (
                     <>
@@ -107,30 +151,6 @@ export default function CreateSegment() {
                   )}
                 </button>
               </div>
-            </div>
-
-            {/* Segment Name Section */}
-            <div className="mb-8">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100">
-                    <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Segment Details</h2>
-                  <p className="text-sm text-gray-500">Name your segment for easy reference</p>
-                </div>
-              </div>
-              <input
-                type="text"
-                placeholder="Enter segment name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-gray-50"
-              />
             </div>
 
             {/* Rule Builder Section */}
@@ -155,10 +175,10 @@ export default function CreateSegment() {
 
             {/* Preview and Save Section */}
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={previewAudience}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 min-w-[180px]"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -167,7 +187,7 @@ export default function CreateSegment() {
                   Preview Audience Size
                 </button>
                 {previewCount !== null && (
-                  <div className="flex-1 bg-white border border-gray-200 rounded-xl px-6 py-3 flex items-center justify-center">
+                  <div className="w-auto bg-white border border-gray-200 rounded-xl px-6 py-3 flex items-center justify-center min-w-[180px]">
                     <span className="text-gray-700">
                       Audience Size: <span className="font-bold text-indigo-600">{previewCount}</span>
                     </span>
@@ -175,15 +195,17 @@ export default function CreateSegment() {
                 )}
               </div>
 
-              <button
-                onClick={saveSegment}
-                className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Save Segment
-              </button>
+              <div className="flex justify-center">
+                <button
+                  onClick={saveSegment}
+                  className="w-auto px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-2 min-w-[200px]"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save Segment
+                </button>
+              </div>
             </div>
           </div>
         </div>
