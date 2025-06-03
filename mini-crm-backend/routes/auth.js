@@ -45,18 +45,37 @@ router.post('/auth/google', async (req, res) => {
   }
 });
 
+// Check current user session
 router.get('/auth/user', (req, res) => {
-  res.json({ user: req.user || null });
+  if (req.isAuthenticated()) {
+    res.json({ user: req.user });
+  } else {
+    res.json({ user: null });
+  }
 });
 
-
-router.get('/auth/logout', (req, res) => {
+// GET logout (for redirect-based flows)
+router.get('/auth/logout', (req, res, next) => {
   req.logout(function(err) {
     if (err) { return next(err); }
-    
-    res.redirect('/');
+    req.session.destroy((err) => {
+      if (err) { return next(err); }
+      res.clearCookie('sessionId');
+      res.redirect('/');
+    });
   });
 });
 
+// POST logout (for API-based flows)
+router.post('/auth/logout', (req, res, next) => {
+  req.logout(function(err) {
+    if (err) { return next(err); }
+    req.session.destroy((err) => {
+      if (err) { return next(err); }
+      res.clearCookie('sessionId');
+      res.json({ success: true, message: 'Logged out successfully' });
+    });
+  });
+});
 
 module.exports = router;

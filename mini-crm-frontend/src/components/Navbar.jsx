@@ -54,13 +54,12 @@ function Navbar() {
                   </div>
                   <span className="text-sm text-white/90">{user.name}</span>
                 </div>
-                <Link
-                  to="/logout"
+                <button
                   onClick={logout}
                   className="text-sm text-white/80 hover:text-white transition-colors"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             ) : (
               <Link
@@ -197,16 +196,15 @@ function Navbar() {
                 </div>
               </div>
               <div className="mt-3">
-                <Link
-                  to="/logout"
+                <button
                   onClick={() => {
                     logout();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="block px-4 py-2 text-base font-medium text-white/80 hover:bg-white/10 hover:text-white"
+                  className="block px-4 py-2 text-base font-medium text-white/80 hover:bg-white/10 hover:text-white w-full text-left"
                 >
                   Logout
-                </Link>
+                </button>
               </div>
             </div>
           )}

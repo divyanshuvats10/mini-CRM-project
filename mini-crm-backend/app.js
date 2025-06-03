@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const axios = require('axios');
 
 const { connectRedis } = require('./redisClient');
@@ -39,11 +40,20 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
+  name: 'sessionId',
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    touchAfter: 24 * 3600,
+    ttl: 24 * 60 * 60
+  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  }
+    maxAge: 24 * 60 * 60 * 1000,
+    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+  },
+  rolling: true
 }));
 
 const passport = require('passport');

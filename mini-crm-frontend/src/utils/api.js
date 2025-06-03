@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
 
 // Request interceptor for debugging
@@ -16,17 +17,34 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor for better error handling
 api.interceptors.response.use(
   (response) => {
+    console.log(`Response from ${response.config.url}:`, response.status, response.data);
     return response;
   },
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    console.error('Response error:', error.response?.status, error.response?.data || error.message);
+    
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      console.log('Unauthorized access - user may need to login');
+      // Don't automatically redirect here, let the AuthContext handle it
+    }
+    
+    if (error.response?.status === 403) {
+      console.log('Forbidden access');
+    }
+    
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout');
+    }
+    
     return Promise.reject(error);
   }
 );
