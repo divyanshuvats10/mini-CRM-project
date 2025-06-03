@@ -12,11 +12,13 @@ function HomePage() {
     totalSegments: 0,
     totalCampaigns: 0
   });
+  const [statsLoading, setStatsLoading] = useState(false);
   const [showAllActions, setShowAllActions] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setStatsLoading(true);
         const [customersRes, ordersRes, segmentsRes, campaignsRes] = await Promise.all([
           api.get('/api/customers/count'),
           api.get('/api/orders/count'),
@@ -32,6 +34,8 @@ function HomePage() {
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
+      } finally {
+        setStatsLoading(false);
       }
     };
 
@@ -152,7 +156,13 @@ function HomePage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Customers</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">{stats.totalCustomers}</dd>
+                      <dd className="text-3xl font-semibold text-gray-900">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                        ) : (
+                          stats.totalCustomers
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -170,7 +180,13 @@ function HomePage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">{stats.totalOrders}</dd>
+                      <dd className="text-3xl font-semibold text-gray-900">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                        ) : (
+                          stats.totalOrders
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -188,7 +204,13 @@ function HomePage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Segments</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">{stats.totalSegments}</dd>
+                      <dd className="text-3xl font-semibold text-gray-900">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                        ) : (
+                          stats.totalSegments
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -206,7 +228,13 @@ function HomePage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Campaigns</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">{stats.totalCampaigns}</dd>
+                      <dd className="text-3xl font-semibold text-gray-900">
+                        {statsLoading ? (
+                          <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                        ) : (
+                          stats.totalCampaigns
+                        )}
+                      </dd>
                     </dl>
                   </div>
                 </div>
