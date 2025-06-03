@@ -83,6 +83,7 @@ function CustomerForm({ onAdd }) {
                 name="totalSpend"
                 value={form.totalSpend}
                 onChange={handleChange}
+                onWheel={(e) => e.target.blur()}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                 placeholder="Enter total spend amount"
                 min="0"
@@ -112,6 +113,7 @@ function CustomerForm({ onAdd }) {
                 name="visits"
                 value={form.visits}
                 onChange={handleChange}
+                onWheel={(e) => e.target.blur()}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                 placeholder="Enter number of visits"
                 min="0"
