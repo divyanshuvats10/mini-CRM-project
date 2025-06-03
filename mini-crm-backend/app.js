@@ -45,9 +45,27 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie'],
+  exposedHeaders: ['Set-Cookie', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
+
+// Add specific headers for cross-origin cookie support
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.some(allowed => {
+    if (typeof allowed === 'string') return allowed === origin;
+    if (allowed instanceof RegExp) return allowed.test(origin);
+    return false;
+  })) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  }
+  next();
+});
 
 app.use(express.json());
 
@@ -62,11 +80,12 @@ app.use(session({
     ttl: 24 * 60 * 60 // = 24 hours. Default session TTL
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // true for HTTPS
+    secure: true, // Always true for cross-origin
     httpOnly: true, // Prevent XSS attacks
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin in production
+    sameSite: 'none', // Required for cross-origin
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    domain: undefined // Don't set domain for cross-origin cookies
+    domain: undefined, // Don't set domain for cross-origin cookies
+    partitioned: true // For Chrome's new cookie partitioning
   },
   rolling: true // Reset the cookie MaxAge on every request
 }));

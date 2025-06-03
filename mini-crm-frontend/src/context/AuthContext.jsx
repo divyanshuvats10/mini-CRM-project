@@ -15,9 +15,13 @@ export const AuthProvider = ({ children }) => {
         console.log('🔍 Checking authentication status...');
         console.log('🌐 Current origin:', window.location.origin);
         console.log('📡 API Base URL:', api.defaults.baseURL);
+        console.log('🍪 All cookies:', document.cookie);
+        console.log('🍪 Session cookies:', document.cookie.split(';').filter(c => c.includes('sessionId')));
         
         const response = await api.get('/auth/user');
         console.log('🔐 Auth check response:', response.data);
+        console.log('🍪 Response headers:', response.headers);
+        console.log('🍪 Set-Cookie header:', response.headers['set-cookie']);
         
         if (response.data.user) {
           setUser(response.data.user);
@@ -45,6 +49,7 @@ export const AuthProvider = ({ children }) => {
       } finally {
         setLoading(false);
         console.log('🏁 Auth check completed');
+        console.log('🍪 Cookies after auth check:', document.cookie);
       }
     };
 
@@ -55,9 +60,12 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       console.log('🚪 Attempting logout...');
+      console.log('🍪 Cookies before logout:', document.cookie);
+      
       await api.post('/auth/logout');
       setUser(null);
       console.log('✅ User logged out successfully');
+      console.log('🍪 Cookies after logout:', document.cookie);
     } catch (error) {
       console.error('🚨 Logout failed:', error);
       // Still clear user state even if request fails

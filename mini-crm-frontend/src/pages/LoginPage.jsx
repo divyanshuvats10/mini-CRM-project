@@ -19,15 +19,30 @@ function LoginPage() {
   }, [user, navigate, from]);
 
   const handleSuccess = (credentialResponse) => {
+    console.log('🔐 Starting Google login...');
+    console.log('🍪 Cookies before login:', document.cookie);
+    
     api.post('/auth/google', {
       credential: credentialResponse.credential
     })
       .then(response => {
+        console.log('✅ Login response received:', response.data);
+        console.log('🍪 Response headers:', response.headers);
+        console.log('🍪 Set-Cookie in response:', response.headers['set-cookie']);
+        console.log('🍪 Cookies after login response:', document.cookie);
+        
         setUser(response.data.user);
+        
+        // Check cookies again after a brief delay
+        setTimeout(() => {
+          console.log('🍪 Cookies after 100ms delay:', document.cookie);
+        }, 100);
+        
         navigate(from, { replace: true });
       })
       .catch(error => {
-        console.error('Login failed:', error);
+        console.error('🚨 Login failed:', error);
+        console.error('Error details:', error.response?.data);
       });
   };
 
