@@ -180,10 +180,20 @@ async function consumeStreams() {
                 }
               }
 
-              if (result?.success) {
-                console.log(`✅ Successfully processed ${streamName} message ${message.id}`);
-              } else if (result?.skipped) {
-                console.log(`⏭️  Skipped ${streamName} message ${message.id} (duplicate)`);
+              if (result?.success || result?.skipped) {
+                // Delete the message from the stream after successful processing or if skipped
+                try {
+                  await redisClient.xDel(streamName, message.id);
+                  console.log(`🗑️  Deleted processed message ${message.id} from ${streamName}`);
+                } catch (delError) {
+                  console.error(`⚠️ Failed to delete message ${message.id} from ${streamName}:`, delError.message);
+                }
+                
+                if (result?.success) {
+                  console.log(`✅ Successfully processed ${streamName} message ${message.id}`);
+                } else if (result?.skipped) {
+                  console.log(`⏭️  Skipped ${streamName} message ${message.id} (duplicate)`);
+                }
               }
               
               // Update last processed ID for this stream
