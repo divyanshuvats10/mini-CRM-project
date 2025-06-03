@@ -1,14 +1,28 @@
 import axios from 'axios';
 
+// Determine the API base URL based on environment
+const getApiBaseUrl = () => {
+  // In production, use the environment variable or default to your Render backend URL
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_URL || 'https://mini-crm-backend-j7uq.onrender.com';
+  }
+  // In development, use localhost
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+};
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: getApiBaseUrl(),
   withCredentials: true, // This ensures cookies are sent with requests for authentication
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout
 });
+
+// Log the API URL being used
+console.log('API Base URL:', api.defaults.baseURL);
+console.log('Environment:', import.meta.env.MODE);
 
 // Request interceptor for debugging
 api.interceptors.request.use(

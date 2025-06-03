@@ -18,19 +18,34 @@ const allowedOrigins = [
   'https://mini-crm-frontend-flame.vercel.app',
   'http://localhost:5173',
   'https://mini-crm-two-chi.vercel.app',
+  /\.vercel\.app$/, // Allow all Vercel apps for your project
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list or matches Vercel pattern
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.log('Blocked by CORS:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposedHeaders: ['Set-Cookie', 'Authorization']
 }));
 
@@ -40,20 +55,20 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  name: 'sessionId',
+  name: 'sessionId', // Customize session name
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
-    touchAfter: 24 * 3600,
-    ttl: 24 * 60 * 60
+    touchAfter: 24 * 3600, // lazy session update
+    ttl: 24 * 60 * 60 // = 24 hours. Default session TTL
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-    domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+    secure: process.env.NODE_ENV === 'production', // true for HTTPS
+    httpOnly: true, // Prevent XSS attacks
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin in production
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    domain: undefined // Don't set domain for cross-origin cookies
   },
-  rolling: true
+  rolling: true // Reset the cookie MaxAge on every request
 }));
 
 const passport = require('passport');
