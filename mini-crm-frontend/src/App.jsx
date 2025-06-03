@@ -76,9 +76,13 @@ function App() {
                   api.post('/api/customers', data)
                     .then(res => {
                       console.log('Customer added:', res.data);
+                      alert('Customer data successfully ingested! The information has been added to the processing queue.');
                       // Optionally redirect or show a toast
                     })
-                    .catch(err => console.error(err));
+                    .catch(err => {
+                      console.error(err);
+                      alert('Error adding customer. Please try again.');
+                    });
                 }} />
               </ProtectedRoute>
             }
@@ -102,9 +106,13 @@ function App() {
                     api.post('/api/orders', data)
                       .then(res => {
                         console.log('Order added:', res.data);
+                        alert('Order data successfully ingested! The information has been added to the processing queue.');
                         // Optionally redirect or show a toast
                       })
-                      .catch(err => console.error(err));
+                      .catch(err => {
+                        console.error(err);
+                        alert('Error adding order. Please try again.');
+                      });
                   }}
                 />
               </ProtectedRoute>
